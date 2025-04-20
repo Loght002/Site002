@@ -2,32 +2,6 @@ const express = require('express');
 const { query, pool } = require('./postgres-setup');
 const bodyParser = require('body-parser');
 const cors = require('cors');
-const express = require('express');
-
-const app = express();
-const PORT = process.env.PORT || 10000;  // Alterado para 10000 para coincidir com o ambiente Render
-
-// Allow CORS from localhost for development and from production domain
-const corsOptions = {
-  origin: function(origin, callback) {
-    const allowedOrigins = ['https://site002.onrender.com', 'http://127.0.0.1:5500', 'http://localhost:5500'];
-    if (!origin || allowedOrigins.indexOf(origin) !== -1) {
-      callback(null, true);
-    } else {
-      callback(new Error('Not allowed by CORS'));
-    }
-  },
-  optionsSuccessStatus: 200
-};
-app.use(cors(corsOptions));
-app.use(bodyParser.json());
-
-// No need to create tables here; assume managed externally or add migration scripts if needed
-
-const express = require('express');
-const bodyParser = require('body-parser');
-const cors = require('cors');
-const { query } = require('./postgres-setup');
 
 const app = express();
 const PORT = process.env.PORT || 10000;  // Alterado para 10000 para coincidir com o ambiente Render
