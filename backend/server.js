@@ -129,6 +129,7 @@ app.post('/sales', async (req, res) => {
     const insertResult = await query(insertSql, [product_id, quantity, total_price, date, time]);
     res.json(insertResult.rows[0]);
   } catch (err) {
+    console.error('Erro ao registrar venda:', err);
     res.status(500).json({ error: err.message });
   }
 });
