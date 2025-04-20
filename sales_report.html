@@ -28,19 +28,19 @@
             margin-bottom: 2rem;
             letter-spacing: 0.1em;
             text-transform: uppercase;
-            text-align: center;
         }
-        #report-container {
+        #sales-container {
+            width: 100%;
+            max-width: 800px;
             background-color: #121212;
-            padding: 1rem;
             border-radius: 12px;
             box-shadow: 0 4px 12px rgba(106, 13, 173, 0.4);
-            width: 100%;
-            max-width: 900px;
+            padding: 1rem;
         }
         table {
             width: 100%;
             border-collapse: collapse;
+            margin-top: 1rem;
         }
         th, td {
             padding: 0.75rem 1rem;
@@ -64,16 +64,13 @@
             padding: 1rem 0;
         }
         a.back-link {
-            margin-top: 2rem;
+            margin: 2rem auto 0 auto;
             color: #6a0dad;
             font-weight: 600;
             text-decoration: none;
             transition: color 0.3s ease;
-            align-self: center;
             display: block;
             width: max-content;
-            margin-left: auto;
-            margin-right: auto;
         }
         a.back-link:hover {
             color: #7e3edb;
@@ -82,15 +79,14 @@
 </head>
 <body>
     <h1>Relatório de Vendas</h1>
-    <div id="report-container">
-        <p class="empty-message">Nenhuma venda registrada.</p>
+    <div id="sales-container">
+        <p class="empty-message">Carregando vendas...</p>
     </div>
-
     <a href="index.html" class="back-link">&larr; Voltar para a página inicial</a>
 
     <script>
         const API_URL = 'https://joaozinho-celular.onrender.com';
-        const reportContainer = document.getElementById('report-container');
+        const salesContainer = document.getElementById('sales-container');
 
         async function fetchSales() {
             try {
@@ -99,34 +95,47 @@
                 const sales = await response.json();
                 return sales;
             } catch (error) {
-                alert(error.message);
+                salesContainer.innerHTML = `<p class="empty-message">${error.message}</p>`;
                 return [];
             }
         }
 
-        async function renderReport() {
-            const sales = await fetchSales();
+        function renderSales(sales) {
             if (sales.length === 0) {
-                reportContainer.innerHTML = '<p class="empty-message">Nenhuma venda registrada.</p>';
+                salesContainer.innerHTML = '<p class="empty-message">Nenhuma venda registrada.</p>';
                 return;
             }
 
-            let tableHTML = '<table><thead><tr><th>Produto</th><th>Quantidade</th><th>Preço Total (R$)</th><th>Data</th><th>Hora</th></tr></thead><tbody>';
+            let tableHTML = '<table><thead><tr><th>ID</th><th>Produto</th><th>Quantidade</th><th>Preço Total (R$)</th><th>Data</th><th>Hora</th></tr></thead><tbody>';
             sales.forEach(sale => {
+                let totalPriceNum = null;
+                if (typeof sale.total_price === 'number') {
+                    totalPriceNum = sale.total_price;
+                } else if (typeof sale.total_price === 'string') {
+                    totalPriceNum = parseFloat(sale.total_price.replace(',', '.'));
+                }
+                if (totalPriceNum === null || isNaN(totalPriceNum)) {
+                    console.error('Preço total inválido para a venda:', sale);
+                }
                 tableHTML += `<tr>
-                    <td>${sale.product || 'Produto desconhecido'}</td>
+                    <td>${sale.id}</td>
+                    <td>${sale.product}</td>
                     <td>${sale.quantity}</td>
-                    <td>${sale.total_price.toFixed(2)}</td>
+                    <td>${(totalPriceNum !== null && !isNaN(totalPriceNum)) ? totalPriceNum.toFixed(2) : sale.total_price}</td>
                     <td>${sale.date}</td>
                     <td>${sale.time}</td>
                 </tr>`;
             });
             tableHTML += '</tbody></table>';
-            reportContainer.innerHTML = tableHTML;
+            salesContainer.innerHTML = tableHTML;
         }
 
-        // Initial render
-        renderReport();
+        async function init() {
+            const sales = await fetchSales();
+            renderSales(sales);
+        }
+
+        init();
     </script>
 </body>
 </html>

@@ -220,15 +220,15 @@ a.back-link {
 
             let tableHTML = '<table><thead><tr><th>Nome</th><th>Preço (R$)</th><th>Quantidade</th><th>Ações</th></tr></thead><tbody>';
             products.forEach(product => {
-                tableHTML += `<tr>
-                    <td>${product.name}</td>
-                    <td>${product.price.toFixed(2)}</td>
-                    <td>${product.quantity}</td>
-                    <td>
-                        <button class="edit-btn" data-id="${product.id}">Editar</button>
-                        <button class="delete-btn" data-id="${product.id}">Excluir</button>
-                    </td>
-                </tr>`;
+            tableHTML += `<tr>
+                <td>${product.name}</td>
+                <td>${typeof product.price === 'number' ? product.price.toFixed(2) : parseFloat(product.price).toFixed(2)}</td>
+                <td>${product.quantity}</td>
+                <td>
+                    <button class="edit-btn" data-id="${product.id}">Editar</button>
+                    <button class="delete-btn" data-id="${product.id}">Excluir</button>
+                </td>
+            </tr>`;
             });
             tableHTML += '</tbody></table>';
             productsContainer.innerHTML = tableHTML;

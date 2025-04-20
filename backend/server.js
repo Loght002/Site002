@@ -75,6 +75,12 @@ app.put('/products/:id', async (req, res) => {
 app.delete('/products/:id', async (req, res) => {
   const { id } = req.params;
   try {
+    // Check if product is referenced in sales
+    const salesCheck = await query('SELECT COUNT(*) FROM sales WHERE product_id = $1', [id]);
+    if (parseInt(salesCheck.rows[0].count) > 0) {
+      res.status(400).json({ error: 'Não é possível excluir produto que possui vendas registradas.' });
+      return;
+    }
     const result = await query('DELETE FROM products WHERE id = $1', [id]);
     if (result.rowCount === 0) {
       res.status(404).json({ error: 'Produto não encontrado' });
@@ -126,6 +132,7 @@ app.post('/sales', async (req, res) => {
 
     // Insert sale
     const insertSql = 'INSERT INTO sales (product_id, quantity, total_price, date, time) VALUES ($1, $2, $3, $4, $5) RETURNING *';
+    // Accept date in yyyy-mm-dd format directly
     const insertResult = await query(insertSql, [product_id, quantity, total_price, date, time]);
     res.json(insertResult.rows[0]);
   } catch (err) {
