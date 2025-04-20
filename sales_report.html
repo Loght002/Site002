@@ -69,7 +69,11 @@
             font-weight: 600;
             text-decoration: none;
             transition: color 0.3s ease;
-            align-self: flex-start;
+            align-self: center;
+            display: block;
+            width: max-content;
+            margin-left: auto;
+            margin-right: auto;
         }
         a.back-link:hover {
             color: #7e3edb;
@@ -100,18 +104,6 @@
             }
         }
 
-        async function fetchProducts() {
-            try {
-                const response = await fetch(`${API_URL}/products`);
-                if (!response.ok) throw new Error('Erro ao buscar produtos');
-                const products = await response.json();
-                return products;
-            } catch (error) {
-                alert(error.message);
-                return [];
-            }
-        }
-
         async function renderReport() {
             const sales = await fetchSales();
             if (sales.length === 0) {
@@ -119,16 +111,10 @@
                 return;
             }
 
-            const products = await fetchProducts();
-            const productMap = {};
-            products.forEach(p => {
-                productMap[p.product_id] = p.product;
-            });
-
             let tableHTML = '<table><thead><tr><th>Produto</th><th>Quantidade</th><th>Preço Total (R$)</th><th>Data</th><th>Hora</th></tr></thead><tbody>';
             sales.forEach(sale => {
                 tableHTML += `<tr>
-                    <td>${productMap[sale.product_id] || 'Produto desconhecido'}</td>
+                    <td>${sale.product || 'Produto desconhecido'}</td>
                     <td>${sale.quantity}</td>
                     <td>${sale.total_price.toFixed(2)}</td>
                     <td>${sale.date}</td>
