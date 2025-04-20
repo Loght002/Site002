@@ -148,6 +148,11 @@ a.back-link {
             margin-top: 1rem;
             font-weight: 600;
             text-align: center;
+            opacity: 0;
+            transition: opacity 0.5s ease-in-out;
+        }
+        #message.show {
+            opacity: 1;
         }
         .empty-message {
             text-align: center;
@@ -302,8 +307,15 @@ a.back-link {
                 }
                 messageDiv.textContent = 'Produto atualizado com sucesso!';
                 messageDiv.style.color = 'green';
+                messageDiv.classList.add('show');
                 editForm.style.display = 'none';
                 await renderProducts();
+                setTimeout(() => {
+                    messageDiv.classList.remove('show');
+                    setTimeout(() => {
+                        messageDiv.textContent = '';
+                    }, 500);
+                }, 5000);
             } catch (error) {
                 alert('Erro ao atualizar produto: ' + error.message);
             }
@@ -322,10 +334,17 @@ a.back-link {
                 }
                 messageDiv.textContent = 'Produto excluído com sucesso!';
                 messageDiv.style.color = 'green';
+                messageDiv.classList.add('show');
                 if (editForm.style.display === 'block' && editIdInput.value == id) {
                     editForm.style.display = 'none';
                 }
                 await renderProducts();
+                setTimeout(() => {
+                    messageDiv.classList.remove('show');
+                    setTimeout(() => {
+                        messageDiv.textContent = '';
+                    }, 500);
+                }, 5000);
             } catch (error) {
                 alert('Erro ao excluir produto: ' + error.message);
             }

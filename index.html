@@ -1,7 +1,18 @@
 <!DOCTYPE html>
 <html lang="pt-br">
 <head>
-    <meta http-equiv="refresh" content="0; url=login.html" />
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Redirecionando...</title>
+    <script>
+        // Redireciona para login.html apenas se não estiver logado
+        if (sessionStorage.getItem('loggedIn') === 'true') {
+            // Já está na index.html, não redireciona para evitar loop
+            // Pode adicionar aqui o código para mostrar a página normalmente
+        } else {
+            window.location.href = 'login.html';
+        }
+    </script>
 </head>
 <body>
 </body>

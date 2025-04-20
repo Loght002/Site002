@@ -82,13 +82,20 @@
             min-height: 1.5em;
             color: #dcdcdc;
             visibility: visible;
+            opacity: 0;
+            transition: opacity 0.5s ease-in-out;
+        }
+        #sales-message.show {
+            opacity: 1;
         }
         a.back-link {
-            margin-top: 2rem;
+            margin: 2rem auto 0 auto;
             color: #6a0dad;
             font-weight: 600;
             text-decoration: none;
             transition: color 0.3s ease;
+            display: block;
+            width: max-content;
         }
         a.back-link:hover {
             color: #7e3edb;
@@ -215,13 +222,17 @@
                 const change = moneyReceived - totalPrice;
                 salesMessage.textContent = `Venda registrada com sucesso! Troco: R$ ${change.toFixed(2)}. Estoque atualizado.`;
                 salesMessage.style.color = 'green';
+                salesMessage.classList.add('show');
 
                 // Atualiza os produtos sem resetar o formulário para evitar sumir a mensagem
                 await populateSaleProducts();
 
-                // Mantém a mensagem visível por 5 segundos
+                // Mantém a mensagem visível por 5 segundos com fade-out
                 setTimeout(() => {
-                    salesMessage.textContent = '';
+                    salesMessage.classList.remove('show');
+                    setTimeout(() => {
+                        salesMessage.textContent = '';
+                    }, 500);
                 }, 5000);
 
                 // Evitar que a página atualize e apague a mensagem

@@ -122,7 +122,7 @@
             const products = await fetchProducts();
             const productMap = {};
             products.forEach(p => {
-                productMap[p.id] = p.name;
+                productMap[p.product_id] = p.product;
             });
 
             let tableHTML = '<table><thead><tr><th>Produto</th><th>Quantidade</th><th>Preço Total (R$)</th><th>Data</th><th>Hora</th></tr></thead><tbody>';
