@@ -5,10 +5,18 @@ const cors = require('cors');
 const path = require('path');
 
 const app = express();
-const PORT = process.env.PORT || 3001;
+const PORT = process.env.PORT || 10000;  // Alterado para 10000 para coincidir com o ambiente Render
 
+// Allow CORS from localhost for development and from production domain
 const corsOptions = {
-  origin: 'https://site002.onrender.com',
+  origin: function(origin, callback) {
+    const allowedOrigins = ['https://site002.onrender.com', 'http://127.0.0.1:5500', 'http://localhost:5500'];
+    if (!origin || allowedOrigins.indexOf(origin) !== -1) {
+      callback(null, true);
+    } else {
+      callback(new Error('Not allowed by CORS'));
+    }
+  },
   optionsSuccessStatus: 200
 };
 app.use(cors(corsOptions));

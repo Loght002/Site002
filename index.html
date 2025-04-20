@@ -3,104 +3,168 @@
 <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>Joãozinho Celular</title>
+    <title>Login - Joãozinho Celular</title>
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;500;700&display=swap" rel="stylesheet" />
     <style>
-        /* Reset and base */
-        * {
-            box-sizing: border-box;
-            margin: 0;
-            padding: 0;
-        }
         body {
             font-family: 'Poppins', sans-serif;
             background-color: #000000;
             color: #ffffff;
-            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+        }
+        #login-container {
+            background-color: #121212;
+            padding: 2rem;
+            border-radius: 12px;
+            box-shadow: 0 4px 12px rgba(106, 13, 173, 0.6);
+            width: 320px;
+            text-align: center;
             display: flex;
             flex-direction: column;
             align-items: center;
-            padding: 2rem 1rem;
         }
         h1 {
             color: #6a0dad;
-            font-weight: 700;
-            margin-bottom: 2rem;
-            letter-spacing: 0.1em;
+            margin-bottom: 1.5rem;
             text-transform: uppercase;
-            text-align: center;
+            letter-spacing: 0.1em;
         }
-        nav {
-            display: flex;
-            flex-direction: column;
-            gap: 1rem;
+        input[type="password"] {
             width: 100%;
-            max-width: 400px;
-        }
-        a.nav-link {
-            display: block;
-            padding: 1rem 1.5rem;
-            background-color: #121212;
-            border-radius: 12px;
-            text-decoration: none;
-            color: #dcdcdc;
-            font-weight: 600;
-            text-align: center;
-            box-shadow: 0 4px 12px rgba(106, 13, 173, 0.4);
-            transition: background-color 0.3s ease, color 0.3s ease;
-        }
-        a.nav-link:hover {
-            background-color: #6a0dad;
-            color: #ffffff;
-        }
-        footer {
-            margin-top: auto;
-            padding: 1rem 0;
-            color: #6a0dad;
-            font-weight: 500;
-            text-align: center;
-            font-size: 0.9rem;
-        }
-        button.logout-btn {
-            margin-top: 1rem;
-            padding: 0.5rem 1rem;
-            background-color: #dc3545;
-            border: none;
+            max-width: 280px;
+            padding: 0.75rem 1rem;
+            margin-bottom: 1.5rem;
+            border: 1px solid #6a0dad;
             border-radius: 8px;
-            color: white;
-            font-weight: 600;
+            background-color: #1e1e1e;
+            color: #ffffff;
+            font-size: 1rem;
+            transition: border-color 0.3s ease;
+        }
+        input[type="password"]:focus {
+            outline: none;
+            border-color: #9a7ed1;
+        }
+        button {
+            width: 100%;
+            max-width: 280px;
+            padding: 0.85rem;
+            background-color: #6a0dad;
+            border: none;
+            border-radius: 10px;
+            color: #ffffff;
+            font-weight: 700;
+            font-size: 1.1rem;
             cursor: pointer;
             transition: background-color 0.3s ease;
         }
-        button.logout-btn:hover {
-            background-color: #b02a37;
+        button:hover {
+            background-color: #7e3edb;
+        }
+        #error-message {
+            color: #dc3545;
+            margin-bottom: 1rem;
+            height: 1.2rem;
         }
     </style>
 </head>
 <body>
-    <h1>Joãozinho Celular</h1>
-    <nav>
-        <a href="product_registration.html" class="nav-link">Cadastro de Produtos</a>
-        <a href="sales.html" class="nav-link">Fazer Vendas</a>
-        <a href="edit_products.html" class="nav-link">Editar Produtos</a>
-        <a href="sales_report.html" class="nav-link">Relatório de Vendas</a>
-    </nav>
-    <button class="logout-btn" id="logout-btn">Sair</button>
-    <footer>
-        &copy; 2024 Joãozinho Celular - Todos os direitos reservados
-    </footer>
+    <div id="login-container">
+        <h1>Login</h1>
+        <div id="error-message"></div>
+        <input type="password" id="password" placeholder="Digite a senha" />
+        <button id="login-btn">Entrar</button>
+    </div>
+
     <script>
-        // Logout function
-        const logoutBtn = document.getElementById('logout-btn');
-        logoutBtn.addEventListener('click', () => {
-            sessionStorage.removeItem('loggedIn');
-            window.location.href = 'login.html';
+        const loginBtn = document.getElementById('login-btn');
+        const passwordInput = document.getElementById('password');
+        const errorMessage = document.getElementById('error-message');
+        const loginContainer = document.getElementById('login-container');
+
+        const PASSWORD = 'admin123';
+
+        function createLoadingAnimation() {
+            const loadingDiv = document.createElement('div');
+            loadingDiv.id = 'loading-animation';
+            loadingDiv.style.position = 'fixed';
+            loadingDiv.style.top = '50%';
+            loadingDiv.style.left = '50%';
+            loadingDiv.style.transform = 'translate(-50%, -50%)';
+            loadingDiv.style.zIndex = '1000';
+            loadingDiv.style.display = 'flex';
+            loadingDiv.style.flexDirection = 'column';
+            loadingDiv.style.alignItems = 'center';
+
+            const spinner = document.createElement('div');
+            spinner.style.border = '8px solid #f3f3f3';
+            spinner.style.borderTop = '8px solid #6a0dad';
+            spinner.style.borderRadius = '50%';
+            spinner.style.width = '60px';
+            spinner.style.height = '60px';
+            spinner.style.animation = 'spin 1s linear infinite';
+
+            const checkmark = document.createElement('div');
+            checkmark.style.display = 'none';
+            checkmark.innerHTML = '&#10004;';
+            checkmark.style.fontSize = '48px';
+            checkmark.style.color = '#6a0dad';
+            checkmark.style.marginTop = '10px';
+
+            loadingDiv.appendChild(spinner);
+            loadingDiv.appendChild(checkmark);
+            document.body.appendChild(loadingDiv);
+
+            return { loadingDiv, spinner, checkmark };
+        }
+
+        function removeLoadingAnimation(loadingDiv) {
+            if (loadingDiv && loadingDiv.parentNode) {
+                loadingDiv.parentNode.removeChild(loadingDiv);
+            }
+        }
+
+        loginBtn.addEventListener('click', () => {
+            const enteredPassword = passwordInput.value;
+            if (enteredPassword === PASSWORD) {
+                sessionStorage.setItem('loggedIn', 'true');
+                loginContainer.style.display = 'none';
+
+                const { loadingDiv, spinner, checkmark } = createLoadingAnimation();
+
+                setTimeout(() => {
+                    spinner.style.display = 'none';
+                    checkmark.style.display = 'block';
+
+                    setTimeout(() => {
+                        removeLoadingAnimation(loadingDiv);
+                        window.location.href = 'main.html';
+                    }, 1500);
+                }, 2000);
+            } else {
+                errorMessage.textContent = 'Senha incorreta. Tente novamente.';
+                passwordInput.value = '';
+                passwordInput.focus();
+            }
         });
 
-        // Check login status and prevent redirect loop
-        if (sessionStorage.getItem('loggedIn') !== 'true' && !window.location.href.endsWith('login.html')) {
-            window.location.href = 'login.html';
+        passwordInput.addEventListener('keyup', (event) => {
+            if (event.key === 'Enter') {
+                loginBtn.click();
+            }
+        });
+
+        if (sessionStorage.getItem('loggedIn') === 'true') {
+            window.location.href = 'main.html';
         }
     </script>
-</body>
-</html>
+    <style>
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+    </style>
