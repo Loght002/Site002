@@ -128,6 +128,19 @@ app.post('/sales', async (req, res) => {
   }
 });
 
-app.listen(PORT, () => {
+const fs = require('fs');
+const path = require('path');
+
+app.listen(PORT, async () => {
   console.log(`Servidor rodando na porta ${PORT}`);
+
+  // Executa o script SQL para criar as tabelas se não existirem
+  const sqlPath = path.join(__dirname, 'check_and_create_tables.sql');
+  const sql = fs.readFileSync(sqlPath, 'utf-8');
+  try {
+    await query(sql);
+    console.log('Tabelas verificadas/criadas com sucesso.');
+  } catch (err) {
+    console.error('Erro ao criar/verificar tabelas:', err);
+  }
 });
