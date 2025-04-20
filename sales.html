@@ -1,0 +1,239 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Fazer Vendas - Joãozinho Celular</title>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;500;700&display=swap" rel="stylesheet" />
+    <style>
+        /* Reset and base */
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+        body {
+            font-family: 'Poppins', sans-serif;
+            background-color: #000000;
+            color: #ffffff;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 2rem 1rem;
+        }
+        h1 {
+            color: #6a0dad;
+            font-weight: 700;
+            margin-bottom: 2rem;
+            letter-spacing: 0.1em;
+            text-transform: uppercase;
+        }
+        form {
+            background-color: #121212;
+            padding: 2rem;
+            border-radius: 12px;
+            width: 100%;
+            max-width: 480px;
+            box-shadow: 0 4px 12px rgba(106, 13, 173, 0.4);
+        }
+        label {
+            display: block;
+            margin-bottom: 0.5rem;
+            font-weight: 500;
+            color: #dcdcdc;
+        }
+        select,
+        input[type="number"] {
+            width: 100%;
+            padding: 0.75rem 1rem;
+            margin-bottom: 1.5rem;
+            border: 1px solid #6a0dad;
+            border-radius: 8px;
+            background-color: #1e1e1e;
+            color: #ffffff;
+            font-size: 1rem;
+            transition: border-color 0.3s ease;
+        }
+        select:focus,
+        input[type="number"]:focus {
+            outline: none;
+            border-color: #9a7ed1;
+        }
+        button.submit-btn {
+            width: 100%;
+            padding: 0.85rem;
+            background-color: #6a0dad;
+            border: none;
+            border-radius: 10px;
+            color: #ffffff;
+            font-weight: 700;
+            font-size: 1.1rem;
+            cursor: pointer;
+            transition: background-color 0.3s ease;
+        }
+        button.submit-btn:hover {
+            background-color: #7e3edb;
+        }
+        #sales-message {
+            margin-top: 1rem;
+            font-weight: 600;
+            text-align: center;
+            min-height: 1.5em;
+            color: #dcdcdc;
+            visibility: visible;
+        }
+        a.back-link {
+            margin-top: 2rem;
+            color: #6a0dad;
+            font-weight: 600;
+            text-decoration: none;
+            transition: color 0.3s ease;
+        }
+        a.back-link:hover {
+            color: #7e3edb;
+        }
+    </style>
+</head>
+<body>
+    <h1>Fazer Vendas</h1>
+    <form id="sales-form">
+        <label for="sale-product">Produto</label>
+        <select id="sale-product" name="sale-product" required>
+            <option value="" disabled selected>Selecione um produto</option>
+        </select>
+
+        <label for="sale-quantity">Quantidade a vender</label>
+        <input type="number" id="sale-quantity" name="sale-quantity" min="1" step="1" required />
+
+        <label for="money-received">Dinheiro recebido (R$)</label>
+        <input type="number" id="money-received" name="money-received" min="0" step="0.01" required />
+
+        <button type="submit" class="submit-btn">Registrar Venda</button>
+    </form>
+
+    <div id="sales-message"></div>
+
+    <a href="index.html" class="back-link">&larr; Voltar para a página inicial</a>
+
+    <script>
+        const API_URL = 'http://localhost:3001';
+        const salesForm = document.getElementById('sales-form');
+        const saleProductSelect = document.getElementById('sale-product');
+        const saleQuantityInput = document.getElementById('sale-quantity');
+        const salesMessage = document.getElementById('sales-message');
+
+        async function fetchProducts() {
+            try {
+                const response = await fetch(`${API_URL}/products`);
+                if (!response.ok) throw new Error('Erro ao buscar produtos');
+                const products = await response.json();
+                return products;
+            } catch (error) {
+                alert(error.message);
+                return [];
+            }
+        }
+
+        async function populateSaleProducts() {
+            const products = await fetchProducts();
+            saleProductSelect.innerHTML = '<option value="" disabled selected>Selecione um produto</option>';
+            products.forEach(product => {
+                saleProductSelect.innerHTML += `<option value="${product.id}">${product.name} (Estoque: ${product.quantity})</option>`;
+            });
+        }
+
+        salesForm.addEventListener('submit', async (event) => {
+            event.preventDefault();
+            event.stopPropagation();
+
+            const selectedProductId = saleProductSelect.value;
+            const saleQuantity = parseInt(saleQuantityInput.value);
+            const moneyReceived = parseFloat(document.getElementById('money-received').value);
+
+            if (!selectedProductId) {
+                salesMessage.textContent = 'Por favor, selecione um produto.';
+                salesMessage.style.color = 'red';
+                return;
+            }
+            if (isNaN(saleQuantity) || saleQuantity < 1) {
+                salesMessage.textContent = 'Por favor, insira uma quantidade válida.';
+                salesMessage.style.color = 'red';
+                return;
+            }
+            if (isNaN(moneyReceived) || moneyReceived < 0) {
+                salesMessage.textContent = 'Por favor, insira um valor válido para o dinheiro recebido.';
+                salesMessage.style.color = 'red';
+                return;
+            }
+
+            try {
+                // Get product details to check stock and price
+                const products = await fetchProducts();
+                const product = products.find(p => p.id == selectedProductId);
+                if (!product) {
+                    salesMessage.textContent = 'Produto não encontrado.';
+                    salesMessage.style.color = 'red';
+                    return;
+                }
+                if (product.quantity < saleQuantity) {
+                    salesMessage.textContent = `Quantidade insuficiente em estoque. Estoque atual: ${product.quantity}`;
+                    salesMessage.style.color = 'red';
+                    return;
+                }
+
+                const totalPrice = product.price * saleQuantity;
+                if (moneyReceived < totalPrice) {
+                    salesMessage.textContent = `Dinheiro insuficiente. Total da venda: R$ ${totalPrice.toFixed(2)}`;
+                    salesMessage.style.color = 'red';
+                    return;
+                }
+
+                // Register sale
+                const now = new Date();
+                const saleRecord = {
+                    product_id: product.id,
+                    quantity: saleQuantity,
+                    total_price: totalPrice,
+                    date: now.toLocaleDateString('pt-BR'),
+                    time: now.toLocaleTimeString('pt-BR')
+                };
+
+                const response = await fetch(`${API_URL}/sales`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(saleRecord),
+                });
+
+                if (!response.ok) {
+                    const errorData = await response.json();
+                    salesMessage.textContent = 'Erro ao registrar venda: ' + (errorData.error || response.statusText);
+                    salesMessage.style.color = 'red';
+                    return;
+                }
+
+                const change = moneyReceived - totalPrice;
+                salesMessage.textContent = `Venda registrada com sucesso! Troco: R$ ${change.toFixed(2)}. Estoque atualizado.`;
+                salesMessage.style.color = 'green';
+
+                // Atualiza os produtos sem resetar o formulário para evitar sumir a mensagem
+                await populateSaleProducts();
+
+                // Mantém a mensagem visível por 5 segundos
+                setTimeout(() => {
+                    salesMessage.textContent = '';
+                }, 5000);
+
+                // Evitar que a página atualize e apague a mensagem
+                // Não recarregamos a página, apenas atualizamos o conteúdo dinamicamente
+            } catch (error) {
+                salesMessage.textContent = 'Erro ao registrar venda: ' + error.message;
+                salesMessage.style.color = 'red';
+            }
+        });
+
+        // Initial population of products in select
+        populateSaleProducts();
+    </script>
+</body>
+</html>

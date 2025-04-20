@@ -1,0 +1,227 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Cadastro de Produtos - Joãozinho Celular</title>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;500;700&display=swap" rel="stylesheet" />
+    <style>
+        /* Reset and base */
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+        body {
+            font-family: 'Poppins', sans-serif;
+            background-color: #000000;
+            color: #ffffff;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 2rem 1rem;
+        }
+        h1 {
+            color: #6a0dad;
+            font-weight: 700;
+            margin-bottom: 2rem;
+            letter-spacing: 0.1em;
+            text-transform: uppercase;
+        }
+        form {
+            background-color: #121212;
+            padding: 2rem;
+            border-radius: 12px;
+            width: 100%;
+            max-width: 480px;
+            box-shadow: 0 4px 12px rgba(106, 13, 173, 0.4);
+        }
+        label {
+            display: block;
+            margin-bottom: 0.5rem;
+            font-weight: 500;
+            color: #dcdcdc;
+        }
+        input[type="text"],
+        input[type="number"] {
+            width: 100%;
+            padding: 0.75rem 1rem;
+            margin-bottom: 1.5rem;
+            border: 1px solid #6a0dad;
+            border-radius: 8px;
+            background-color: #1e1e1e;
+            color: #ffffff;
+            font-size: 1rem;
+            transition: border-color 0.3s ease;
+        }
+        input[type="text"]::placeholder,
+        input[type="number"]::placeholder {
+            color: #9a7ed1;
+        }
+        input[type="text"]:focus,
+        input[type="number"]:focus {
+            outline: none;
+            border-color: #9a7ed1;
+        }
+        button.submit-btn {
+            width: 100%;
+            padding: 0.85rem;
+            background-color: #6a0dad;
+            border: none;
+            border-radius: 10px;
+            color: #ffffff;
+            font-weight: 700;
+            font-size: 1.1rem;
+            cursor: pointer;
+            transition: background-color 0.3s ease;
+        }
+        button.submit-btn:hover {
+            background-color: #7e3edb;
+        }
+        #products-container {
+            margin-top: 2rem;
+            width: 100%;
+            max-width: 480px;
+            background-color: #121212;
+            border-radius: 12px;
+            box-shadow: 0 4px 12px rgba(106, 13, 173, 0.4);
+            padding: 1rem;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+        th, td {
+            padding: 0.75rem 1rem;
+            text-align: left;
+            color: #dcdcdc;
+        }
+        th {
+            background-color: #6a0dad;
+            font-weight: 700;
+            letter-spacing: 0.05em;
+            text-transform: uppercase;
+            border-radius: 8px 8px 0 0;
+        }
+        tr:nth-child(even) td {
+            background-color: #1e1e1e;
+        }
+        .empty-message {
+            text-align: center;
+            color: #9a7ed1;
+            font-style: italic;
+            padding: 1rem 0;
+        }
+        a.back-link {
+            margin-top: 2rem;
+            color: #6a0dad;
+            font-weight: 600;
+            text-decoration: none;
+            transition: color 0.3s ease;
+        }
+        a.back-link:hover {
+            color: #7e3edb;
+        }
+    </style>
+</head>
+<body>
+    <h1>Cadastro de Produtos</h1>
+    <form id="product-form">
+        <label for="product-name">Nome do Produto</label>
+        <input type="text" id="product-name" name="product-name" placeholder="Digite o nome do produto" required />
+
+        <label for="product-price">Preço (R$)</label>
+        <input type="number" id="product-price" name="product-price" min="0" step="0.01" placeholder="Digite o preço" required />
+
+        <label for="product-quantity">Quantidade</label>
+        <input type="number" id="product-quantity" name="product-quantity" min="1" step="1" placeholder="Digite a quantidade" required />
+
+        <button type="submit" class="submit-btn">Cadastrar Produto</button>
+    </form>
+
+    <div id="products-container">
+        <p class="empty-message">Nenhum produto cadastrado.</p>
+    </div>
+
+    <a href="index.html" class="back-link">&larr; Voltar para a página inicial</a>
+
+    <script>
+        const form = document.getElementById('product-form');
+        const productsContainer = document.getElementById('products-container');
+        const API_URL = 'http://localhost:3001';
+
+        async function fetchProducts() {
+            try {
+                const response = await fetch(`${API_URL}/products`);
+                if (!response.ok) throw new Error('Erro ao buscar produtos');
+                const products = await response.json();
+                return products;
+            } catch (error) {
+                alert(error.message);
+                return [];
+            }
+        }
+
+        async function renderProducts() {
+            const products = await fetchProducts();
+            if (products.length === 0) {
+                productsContainer.innerHTML = '<p class="empty-message">Nenhum produto cadastrado.</p>';
+                return;
+            }
+
+            let tableHTML = '<table><thead><tr><th>Nome</th><th>Preço (R$)</th><th>Quantidade</th></tr></thead><tbody>';
+            products.forEach(product => {
+                tableHTML += `<tr>
+                    <td>${product.name}</td>
+                    <td>${product.price.toFixed(2)}</td>
+                    <td>${product.quantity}</td>
+                </tr>`;
+            });
+            tableHTML += '</tbody></table>';
+            productsContainer.innerHTML = tableHTML;
+        }
+
+        form.addEventListener('submit', async (event) => {
+            event.preventDefault();
+
+            const name = form['product-name'].value.trim();
+            const price = parseFloat(form['product-price'].value);
+            const quantity = parseInt(form['product-quantity'].value);
+
+            if (!name) {
+                alert('Por favor, insira o nome do produto.');
+                return;
+            }
+            if (isNaN(price) || price < 0) {
+                alert('Por favor, insira um preço válido.');
+                return;
+            }
+            if (isNaN(quantity) || quantity < 1) {
+                alert('Por favor, insira uma quantidade válida.');
+                return;
+            }
+
+            try {
+                const response = await fetch(`${API_URL}/products`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ name, price, quantity }),
+                });
+                if (!response.ok) {
+                    const errorData = await response.json();
+                    alert('Erro ao cadastrar produto: ' + (errorData.error || response.statusText));
+                    return;
+                }
+                await renderProducts();
+                form.reset();
+            } catch (error) {
+                alert('Erro ao cadastrar produto: ' + error.message);
+            }
+        });
+
+        // Initial render
+        renderProducts();
+    </script>
+</body>
+</html>
