@@ -9,7 +9,7 @@ const PORT = process.env.PORT || 10000;  // Alterado para 10000 para coincidir c
 // Allow CORS from localhost for development and from production domain
 const corsOptions = {
   origin: function(origin, callback) {
-    const allowedOrigins = ['https://site002.onrender.com', 'http://127.0.0.1:5500', 'http://localhost:5500'];
+    const allowedOrigins = ['https://site002.onrender.com', 'http://127.0.0.1:5500', 'http://localhost:5500', 'https://joaozinho-celular.onrender.com'];
     if (!origin || allowedOrigins.indexOf(origin) !== -1) {
       callback(null, true);
     } else {
@@ -27,7 +27,12 @@ app.use(bodyParser.json());
 app.get('/products', async (req, res) => {
   try {
     const result = await query('SELECT * FROM products');
-    res.json(result.rows);
+    // Convert price to number before sending response
+    const products = result.rows.map(product => ({
+      ...product,
+      price: parseFloat(product.price)
+    }));
+    res.json(products);
   } catch (err) {
     res.status(500).json({ error: err.message });
   }

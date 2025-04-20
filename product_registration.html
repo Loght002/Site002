@@ -172,9 +172,18 @@
 
             let tableHTML = '<table><thead><tr><th>Nome</th><th>Preço (R$)</th><th>Quantidade</th></tr></thead><tbody>';
             products.forEach(product => {
+                let priceNum = null;
+                if (typeof product.price === 'number') {
+                    priceNum = product.price;
+                } else if (typeof product.price === 'string') {
+                    priceNum = parseFloat(product.price.replace(',', '.'));
+                }
+                if (priceNum === null || isNaN(priceNum)) {
+                    console.error('Preço inválido para o produto:', product);
+                }
                 tableHTML += `<tr>
                     <td>${product.name}</td>
-                    <td>${product.price.toFixed(2)}</td>
+                    <td>${(priceNum !== null && !isNaN(priceNum)) ? priceNum.toFixed(2) : product.price}</td>
                     <td>${product.quantity}</td>
                 </tr>`;
             });
