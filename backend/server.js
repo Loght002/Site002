@@ -1,8 +1,8 @@
 const express = require('express');
-const sqlite3 = require('sqlite3').verbose();
+const { query, pool } = require('./postgres-setup');
 const bodyParser = require('body-parser');
 const cors = require('cors');
-const path = require('path');
+const express = require('express');
 
 const app = express();
 const PORT = process.env.PORT || 10000;  // Alterado para 10000 para coincidir com o ambiente Render
@@ -22,151 +22,136 @@ const corsOptions = {
 app.use(cors(corsOptions));
 app.use(bodyParser.json());
 
-// Initialize SQLite database
-const db = new sqlite3.Database(path.resolve(__dirname, 'joaozinho_celular.db'), (err) => {
-  if (err) {
-    console.error('Erro ao conectar ao banco de dados:', err.message);
-  } else {
-    console.log('Conectado ao banco de dados SQLite.');
-  }
-});
+// No need to create tables here; assume managed externally or add migration scripts if needed
 
-// Create tables if not exist
-db.serialize(() => {
-  db.run(`CREATE TABLE IF NOT EXISTS products (
-    id INTEGER PRIMARY KEY AUTOINCREMENT,
-    name TEXT UNIQUE,
-    price REAL,
-    quantity INTEGER
-  )`);
+const express = require('express');
+const bodyParser = require('body-parser');
+const cors = require('cors');
+const { query } = require('./postgres-setup');
 
-  db.run(`CREATE TABLE IF NOT EXISTS sales (
-    id INTEGER PRIMARY KEY AUTOINCREMENT,
-    product_id INTEGER,
-    quantity INTEGER,
-    total_price REAL,
-    date TEXT,
-    time TEXT,
-    FOREIGN KEY(product_id) REFERENCES products(id)
-  )`);
-});
+const app = express();
+const PORT = process.env.PORT || 10000;  // Alterado para 10000 para coincidir com o ambiente Render
+
+// Allow CORS from localhost for development and from production domain
+const corsOptions = {
+  origin: function(origin, callback) {
+    const allowedOrigins = ['https://site002.onrender.com', 'http://127.0.0.1:5500', 'http://localhost:5500'];
+    if (!origin || allowedOrigins.indexOf(origin) !== -1) {
+      callback(null, true);
+    } else {
+      callback(new Error('Not allowed by CORS'));
+    }
+  },
+  optionsSuccessStatus: 200
+};
+app.use(cors(corsOptions));
+app.use(bodyParser.json());
 
 // Products endpoints
 
 // Get all products
-app.get('/products', (req, res) => {
-  db.all('SELECT * FROM products', [], (err, rows) => {
-    if (err) {
-      res.status(500).json({ error: err.message });
-      return;
-    }
-    res.json(rows);
-  });
+app.get('/products', async (req, res) => {
+  try {
+    const result = await query('SELECT * FROM products');
+    res.json(result.rows);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
 });
 
 // Add new product
-app.post('/products', (req, res) => {
+app.post('/products', async (req, res) => {
   const { name, price, quantity } = req.body;
-  const sql = 'INSERT INTO products (name, price, quantity) VALUES (?, ?, ?)';
-  db.run(sql, [name, price, quantity], function(err) {
-    if (err) {
-      res.status(400).json({ error: err.message });
-      return;
-    }
-    res.json({ id: this.lastID, name, price, quantity });
-  });
+  try {
+    const result = await query(
+      'INSERT INTO products (name, price, quantity) VALUES ($1, $2, $3) RETURNING *',
+      [name, price, quantity]
+    );
+    res.json(result.rows[0]);
+  } catch (err) {
+    res.status(400).json({ error: err.message });
+  }
 });
 
 // Update product
-app.put('/products/:id', (req, res) => {
+app.put('/products/:id', async (req, res) => {
   const { name, price, quantity } = req.body;
   const { id } = req.params;
-  const sql = 'UPDATE products SET name = ?, price = ?, quantity = ? WHERE id = ?';
-  db.run(sql, [name, price, quantity, id], function(err) {
-    if (err) {
-      res.status(400).json({ error: err.message });
-      return;
-    }
-    if (this.changes === 0) {
+  try {
+    const result = await query(
+      'UPDATE products SET name = $1, price = $2, quantity = $3 WHERE id = $4 RETURNING *',
+      [name, price, quantity, id]
+    );
+    if (result.rowCount === 0) {
       res.status(404).json({ error: 'Produto não encontrado' });
       return;
     }
-    res.json({ id, name, price, quantity });
-  });
+    res.json(result.rows[0]);
+  } catch (err) {
+    res.status(400).json({ error: err.message });
+  }
 });
 
 // Delete product
-app.delete('/products/:id', (req, res) => {
+app.delete('/products/:id', async (req, res) => {
   const { id } = req.params;
-  const sql = 'DELETE FROM products WHERE id = ?';
-  db.run(sql, [id], function(err) {
-    if (err) {
-      res.status(400).json({ error: err.message });
-      return;
-    }
-    if (this.changes === 0) {
+  try {
+    const result = await query('DELETE FROM products WHERE id = $1', [id]);
+    if (result.rowCount === 0) {
       res.status(404).json({ error: 'Produto não encontrado' });
       return;
     }
     res.json({ message: 'Produto excluído com sucesso' });
-  });
+  } catch (err) {
+    res.status(400).json({ error: err.message });
+  }
 });
 
 // Sales endpoints
 
 // Get all sales
-app.get('/sales', (req, res) => {
-  const sql = `SELECT sales.id, products.name as product, sales.quantity, sales.total_price, sales.date, sales.time
-               FROM sales
-               JOIN products ON sales.product_id = products.id
-               ORDER BY sales.date DESC, sales.time DESC`;
-  db.all(sql, [], (err, rows) => {
-    if (err) {
-      res.status(500).json({ error: err.message });
-      return;
-    }
-    res.json(rows);
-  });
+app.get('/sales', async (req, res) => {
+  try {
+    const sql = `
+      SELECT sales.id, products.name as product, sales.quantity, sales.total_price, sales.date, sales.time
+      FROM sales
+      JOIN products ON sales.product_id = products.id
+      ORDER BY sales.date DESC, sales.time DESC
+    `;
+    const result = await query(sql);
+    res.json(result.rows);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
 });
 
 // Add new sale
-app.post('/sales', (req, res) => {
+app.post('/sales', async (req, res) => {
   const { product_id, quantity, total_price, date, time } = req.body;
-
-  // Check stock first
-  db.get('SELECT quantity FROM products WHERE id = ?', [product_id], (err, row) => {
-    if (err) {
-      res.status(500).json({ error: err.message });
-      return;
-    }
-    if (!row) {
+  try {
+    // Check stock
+    const stockResult = await query('SELECT quantity FROM products WHERE id = $1', [product_id]);
+    if (stockResult.rowCount === 0) {
       res.status(404).json({ error: 'Produto não encontrado' });
       return;
     }
-    if (row.quantity < quantity) {
+    const stockQuantity = stockResult.rows[0].quantity;
+    if (stockQuantity < quantity) {
       res.status(400).json({ error: 'Quantidade insuficiente em estoque' });
       return;
     }
 
     // Update stock
-    const newQuantity = row.quantity - quantity;
-    db.run('UPDATE products SET quantity = ? WHERE id = ?', [newQuantity, product_id], function(err) {
-      if (err) {
-        res.status(500).json({ error: err.message });
-        return;
-      }
+    const newQuantity = stockQuantity - quantity;
+    await query('UPDATE products SET quantity = $1 WHERE id = $2', [newQuantity, product_id]);
 
-      // Insert sale
-      const sql = 'INSERT INTO sales (product_id, quantity, total_price, date, time) VALUES (?, ?, ?, ?, ?)';
-      db.run(sql, [product_id, quantity, total_price, date, time], function(err) {
-        if (err) {
-          res.status(500).json({ error: err.message });
-          return;
-        }
-        res.json({ id: this.lastID, product_id, quantity, total_price, date, time });
-      });
-    });
-  });
+    // Insert sale
+    const insertSql = 'INSERT INTO sales (product_id, quantity, total_price, date, time) VALUES ($1, $2, $3, $4, $5) RETURNING *';
+    const insertResult = await query(insertSql, [product_id, quantity, total_price, date, time]);
+    res.json(insertResult.rows[0]);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
 });
 
 app.listen(PORT, () => {
