@@ -79,15 +79,69 @@
         const loginBtn = document.getElementById('login-btn');
         const passwordInput = document.getElementById('password');
         const errorMessage = document.getElementById('error-message');
+        const loginContainer = document.getElementById('login-container');
 
         // Define a senha fixa para o login
         const PASSWORD = 'admin123';
+
+        function createLoadingAnimation() {
+            const loadingDiv = document.createElement('div');
+            loadingDiv.id = 'loading-animation';
+            loadingDiv.style.position = 'fixed';
+            loadingDiv.style.top = '50%';
+            loadingDiv.style.left = '50%';
+            loadingDiv.style.transform = 'translate(-50%, -50%)';
+            loadingDiv.style.zIndex = '1000';
+            loadingDiv.style.display = 'flex';
+            loadingDiv.style.flexDirection = 'column';
+            loadingDiv.style.alignItems = 'center';
+
+            const spinner = document.createElement('div');
+            spinner.style.border = '8px solid #f3f3f3';
+            spinner.style.borderTop = '8px solid #6a0dad';
+            spinner.style.borderRadius = '50%';
+            spinner.style.width = '60px';
+            spinner.style.height = '60px';
+            spinner.style.animation = 'spin 1s linear infinite';
+
+            const checkmark = document.createElement('div');
+            checkmark.style.display = 'none';
+            checkmark.innerHTML = '&#10004;';
+            checkmark.style.fontSize = '48px';
+            checkmark.style.color = '#6a0dad';
+            checkmark.style.marginTop = '10px';
+
+            loadingDiv.appendChild(spinner);
+            loadingDiv.appendChild(checkmark);
+            document.body.appendChild(loadingDiv);
+
+            return { loadingDiv, spinner, checkmark };
+        }
+
+        function removeLoadingAnimation(loadingDiv) {
+            if (loadingDiv && loadingDiv.parentNode) {
+                loadingDiv.parentNode.removeChild(loadingDiv);
+            }
+        }
 
         loginBtn.addEventListener('click', () => {
             const enteredPassword = passwordInput.value;
             if (enteredPassword === PASSWORD) {
                 sessionStorage.setItem('loggedIn', 'true');
-                window.location.href = 'index.html';
+                loginContainer.style.display = 'none';
+
+                const { loadingDiv, spinner, checkmark } = createLoadingAnimation();
+
+                setTimeout(() => {
+                    spinner.style.display = 'none';
+                    checkmark.style.display = 'block';
+
+                    setTimeout(() => {
+                        removeLoadingAnimation(loadingDiv);
+                        // Fade in index.html
+                        window.location.href = 'index.html';
+                    }, 1500);
+                }, 2000);
             } else {
                 errorMessage.textContent = 'Senha incorreta. Tente novamente.';
                 passwordInput.value = '';
@@ -107,5 +161,11 @@
             window.location.href = 'index.html';
         }
     </script>
+    <style>
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+    </style>
 </body>
 </html>
