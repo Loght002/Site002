@@ -97,8 +97,8 @@
             window.location.href = 'login.html';
         });
 
-        // Check login status
-        if (sessionStorage.getItem('loggedIn') !== 'true') {
+        // Check login status and prevent redirect loop
+        if (sessionStorage.getItem('loggedIn') !== 'true' && !window.location.href.endsWith('login.html')) {
             window.location.href = 'login.html';
         }
     </script>
