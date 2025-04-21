@@ -82,7 +82,7 @@
         #products-container {
             margin-top: 2rem;
             width: 100%;
-            max-width: 480px;
+            max-width: 720px;
             background-color: #121212;
             border-radius: 12px;
             box-shadow: 0 4px 12px rgba(106, 13, 173, 0.4);
@@ -131,8 +131,11 @@
         <label for="product-name">Nome do Produto</label>
         <input type="text" id="product-name" name="product-name" placeholder="Digite o nome do produto" required />
 
-        <label for="product-price">Preço (R$)</label>
-        <input type="number" id="product-price" name="product-price" min="0" step="0.01" placeholder="Digite o preço" required />
+        <label for="retail-price">Preço Varejo (R$)</label>
+        <input type="number" id="retail-price" name="retail-price" min="0" step="0.01" placeholder="Digite o preço de varejo" required />
+
+        <label for="wholesale-price">Preço Atacado (R$)</label>
+        <input type="number" id="wholesale-price" name="wholesale-price" min="0" step="0.01" placeholder="Digite o preço de atacado" required />
 
         <label for="product-quantity">Quantidade</label>
         <input type="number" id="product-quantity" name="product-quantity" min="1" step="1" placeholder="Digite a quantidade" required />
@@ -170,20 +173,14 @@
                 return;
             }
 
-            let tableHTML = '<table><thead><tr><th>Nome</th><th>Preço (R$)</th><th>Quantidade</th></tr></thead><tbody>';
+            let tableHTML = '<table><thead><tr><th>Nome</th><th>Preço Varejo (R$)</th><th>Preço Atacado (R$)</th><th>Quantidade</th></tr></thead><tbody>';
             products.forEach(product => {
-                let priceNum = null;
-                if (typeof product.price === 'number') {
-                    priceNum = product.price;
-                } else if (typeof product.price === 'string') {
-                    priceNum = parseFloat(product.price.replace(',', '.'));
-                }
-                if (priceNum === null || isNaN(priceNum)) {
-                    console.error('Preço inválido para o produto:', product);
-                }
+                const retailPrice = parseFloat(product.retail_price).toFixed(2);
+                const wholesalePrice = parseFloat(product.wholesale_price).toFixed(2);
                 tableHTML += `<tr>
                     <td>${product.name}</td>
-                    <td>${(priceNum !== null && !isNaN(priceNum)) ? priceNum.toFixed(2) : product.price}</td>
+                    <td>${retailPrice}</td>
+                    <td>${wholesalePrice}</td>
                     <td>${product.quantity}</td>
                 </tr>`;
             });
@@ -195,15 +192,20 @@
             event.preventDefault();
 
             const name = form['product-name'].value.trim();
-            const price = parseFloat(form['product-price'].value);
+            const retail_price = parseFloat(form['retail-price'].value);
+            const wholesale_price = parseFloat(form['wholesale-price'].value);
             const quantity = parseInt(form['product-quantity'].value);
 
             if (!name) {
                 alert('Por favor, insira o nome do produto.');
                 return;
             }
-            if (isNaN(price) || price < 0) {
-                alert('Por favor, insira um preço válido.');
+            if (isNaN(retail_price) || retail_price < 0) {
+                alert('Por favor, insira um preço de varejo válido.');
+                return;
+            }
+            if (isNaN(wholesale_price) || wholesale_price < 0) {
+                alert('Por favor, insira um preço de atacado válido.');
                 return;
             }
             if (isNaN(quantity) || quantity < 1) {
@@ -215,7 +217,7 @@
                 const response = await fetch(`${API_URL}/products`, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ name, price, quantity }),
+                    body: JSON.stringify({ name, retail_price, wholesale_price, quantity }),
                 });
                 if (!response.ok) {
                     const errorData = await response.json();
